@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/models/category.dart';
-import 'package:shopping_list/models/grocery_item.dart';
+//import 'package:shopping_list/models/grocery_item.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -13,16 +15,45 @@ class NewItem extends StatefulWidget {
 class _NewItemState extends State<NewItem> {
   final _formKey = GlobalKey<FormState>();
 
-  void _saveItem() {
+  void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      Navigator.of(context).pop(
-        GroceryItem(
-            id: DateTime.now().toString(),
-            name: _enteredName,
-            quantity: _enteredQuantity,
-            category: _selectedCategory),
+      //sent data to the firebase backend
+      final url = Uri.https(
+          'flutter-prep-f3d37-default-rtdb.asia-southeast1.firebasedatabase.app',
+          'shopping-list.json');
+      await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(
+          {
+            'name': _enteredName,
+            'quantity': _enteredQuantity,
+            'category': _selectedCategory.title,
+          },
+        ),
       );
+
+      //want to check the status of successfully sent data to the backend
+      // print(response.body);
+      // print(response.statusCode);
+
+      //if the context for the Navigator.pop is not mounted then dont navigator.pop
+      // if (!context.mounted) {
+      //   return;
+      // }
+
+      //go back to first screen
+      //Navigator.of(context).pop();
+
+      //sent data to the grocery screen
+      // Navigator.of(context).pop(
+      //   GroceryItem(
+      //       id: DateTime.now().toString(),
+      //       name: _enteredName,
+      //       quantity: _enteredQuantity,
+      //       category: _selectedCategory),
+      // );
     }
   }
 
