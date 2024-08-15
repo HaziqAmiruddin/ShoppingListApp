@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/models/category.dart';
-//import 'package:shopping_list/models/grocery_item.dart';
+import 'package:shopping_list/models/grocery_item.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -17,12 +17,15 @@ class _NewItemState extends State<NewItem> {
 
   void _saveItem() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isSending = true;
+      });
       _formKey.currentState!.save();
       //sent data to the firebase backend
       final url = Uri.https(
           'flutter-prep-f3d37-default-rtdb.asia-southeast1.firebasedatabase.app',
           'shopping-list.json');
-      await http.post(
+      final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: json.encode(
@@ -34,32 +37,40 @@ class _NewItemState extends State<NewItem> {
         ),
       );
 
+      final Map<String, dynamic> resData = json.decode(response.body);
+
       //want to check the status of successfully sent data to the backend
       // print(response.body);
       // print(response.statusCode);
 
+      //useback on 228. Avoiding Unnecessary Request
       //if the context for the Navigator.pop is not mounted then dont navigator.pop
-      // if (!context.mounted) {
-      //   return;
-      // }
+      if (!context.mounted) {
+        return;
+      }
 
       //go back to first screen
       //Navigator.of(context).pop();
 
+      //useback on 228. Avoiding Unnecessary Request
       //sent data to the grocery screen
-      // Navigator.of(context).pop(
-      //   GroceryItem(
-      //       id: DateTime.now().toString(),
-      //       name: _enteredName,
-      //       quantity: _enteredQuantity,
-      //       category: _selectedCategory),
-      // );
+      Navigator.of(context).pop(
+        GroceryItem(
+            //use for pass value
+            //id: DateTime.now().toString(),
+            //use for unique data from backend
+            id: resData['name'],
+            name: _enteredName,
+            quantity: _enteredQuantity,
+            category: _selectedCategory),
+      );
     }
   }
 
   var _enteredName = '';
   var _enteredQuantity = 1;
   var _selectedCategory = categories[Categories.vegetables]!;
+  var _isSending = false;
 
   @override
   Widget build(BuildContext context) {
@@ -152,14 +163,22 @@ class _NewItemState extends State<NewItem> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () {
-                      _formKey.currentState!.reset();
-                    },
+                    onPressed: _isSending
+                        ? null
+                        : () {
+                            _formKey.currentState!.reset();
+                          },
                     child: const Text('Reset'),
                   ),
                   ElevatedButton(
-                    onPressed: _saveItem,
-                    child: const Text('Submit Item'),
+                    onPressed: _isSending ? null : _saveItem,
+                    child: _isSending
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(),
+                          )
+                        : const Text('Submit Item'),
                   ),
                 ],
               )
