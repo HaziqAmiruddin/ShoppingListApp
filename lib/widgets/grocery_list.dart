@@ -47,7 +47,7 @@ class _GroceryListState extends State<GroceryList> {
 
       if (response.body == 'null') {
         setState(() {
-          _isLoading == false;
+          _isLoading = false;
         });
         return;
       }
@@ -146,7 +146,7 @@ class _GroceryListState extends State<GroceryList> {
 
     final url = Uri.https(
         'flutter-prep-f3d37-default-rtdb.asia-southeast1.firebasedatabase.app',
-        'shopping-list.json/${item.id}');
+        'shopping-list/${item.id}.json');
 
     final response = await http.delete(url);
 
@@ -194,7 +194,7 @@ class _GroceryListState extends State<GroceryList> {
     }
 
     if (_error != null) {
-      Center(
+      content = Center(
         child: Text(_error!),
       );
     }
